@@ -76,6 +76,11 @@ abstract class Prompt
     protected static ?Closure $revertUsing = null;
 
     /**
+     * The revert handler from the StepBuilder.
+     */
+    public static $revertClosure = null;
+
+    /**
      * The output instance.
      */
     protected static OutputInterface $output;
@@ -104,7 +109,7 @@ abstract class Prompt
 
             static::$interactive ??= stream_isatty(STDIN);
 
-            if (! static::$interactive) {
+            if (!static::$interactive) {
                 return $this->default();
             }
 
@@ -298,9 +303,19 @@ abstract class Prompt
         if ($this->state === 'submit') {
             return false;
         }
-
+        if ($key === Key::CTRL_R) {
+            $this->state = "error";
+            if (self::$revertClosure) {
+                $this->error = "Reverted";
+                call_user_func(self::$revertClosure);
+                return false;
+            } else {
+                $this->error = "This cannot be Reverted";
+                return true;
+            }
+        }
         if ($key === Key::CTRL_U) {
-            if (! self::$revertUsing) {
+            if (!self::$revertUsing) {
                 $this->state = 'error';
                 $this->error = 'This cannot be reverted.';
 
@@ -342,7 +357,7 @@ abstract class Prompt
             return;
         }
 
-        if (! isset($this->validate) && ! isset(static::$validateUsing)) {
+        if (!isset($this->validate) && !isset(static::$validateUsing)) {
             return;
         }
 
@@ -352,7 +367,7 @@ abstract class Prompt
             default => throw new RuntimeException('The validation logic is missing.'),
         };
 
-        if (! is_string($error) && ! is_null($error)) {
+        if (!is_string($error) && !is_null($error)) {
             throw new RuntimeException('The validator must return a string or null.');
         }
 

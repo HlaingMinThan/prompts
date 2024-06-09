@@ -91,6 +91,8 @@ class Key
      * Negative affirmation
      */
     const CTRL_U = "\x15";
+    const CTRL_R = "\x12"; // Added value for CTRL_R
+
 
     /**
      * Checks for the constant values for the given match and returns the match
